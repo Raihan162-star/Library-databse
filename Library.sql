@@ -1,136 +1,80 @@
 CREATE DATABASE LibraryDB;
-
 USE LibraryDB;
 
 
--- This sql statment deletes the database at any given moment
+CREATE TABLE Books (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    genre VARCHAR(100),
+    published_year INT
+);
 
-DROP DATABASE LibraryDB;
+CREATE TABLE Borrowers (
+    borrower_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    phone_number VARCHAR(20)
+);
 
+CREATE TABLE BorrowedBooks (
+    borrowed_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT,
+    borrower_id INT,
+    borrow_date DATE,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES Books(book_id),
+    FOREIGN KEY (borrower_id) REFERENCES Borrowers(borrower_id)
+);
 
-
-SELECT DATABASE();
-
--- Creation of the table that holds data of the books
-CREATE TABLE tbl_BooksDB(
-Book_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-Title VARCHAR(60) NOT NULL,
-Author VARCHAR(60) NOT NULL,
-Genre VARCHAR(60) NOT NULL,
-Published_year VARCHAR(60) NOT NULL
-
-
-)
-
-SHOW TABLES;
-
--- This shows the structure of the table
-DESC tbl_BooksDB;
-
--- Using Alter tables and the unique contraint so that there arent any duplicate data
-ALTER TABLE tbl_BooksDB
-ADD CONSTRAINT unique_book_combo
-UNIQUE (Title, Author, Genre, Published_year);
-
-
-ALTER TABLE borrowers
-ADD CONSTRAINT unique_book_combo
-UNIQUE (Borrower,Email,Telephone);
-
-ALTER TABLE tbl_BooksDB AUTO_INCREMENT = 1;
-ALTER TABLE Borrowers AUTO_INCREMENT = 1;
-
--- insertation of data onto the table
-INSERT INTO tbl_BooksDB(Title,Author,Genre,Published_year  )
-VALUES('The Lord of the rings','J. R. R. Tolkien','high fantasy', '1954');
-INSERT INTO tbl_BooksDB(Title,Author,Genre,Published_year)
-VALUES('The Great Gatsby','F.Scott Fitzgerald','Tragedy','1925');
-INSERT INTO tbl_BooksDB(Title,Author,Genre,Published_year)
-VALUES('To Kill a MockingBird','Harper Lee','Southern Gothic','1960');
-INSERT INTO tbl_BooksDB(Title,Author,Genre,Published_year)
-VALUES('An Inspector calls','J.B Priestley','Drama','1945');
-INSERT INTO tbl_BooksDB(Title,Author,Genre,Published_year)
-VALUES('Frankenstein','Mary Shelly','Gothic','1818');
+SELECT * FROM Books;
+SELECT * FROM BorrowedBooks;
 
 
--- This delete statment can delete specific data from the data by using the primary key 
-DELETE FROM tbl_BooksDB WHERE Book_ID = 2;
+-- Insert sample books
+INSERT INTO Books (title, author, genre, published_year) VALUES
+('To Kill a Mockingbird', 'Harper Lee', 'Fiction', 1960),
+('1984', 'George Orwell', 'Dystopian', 1949),
+('The Great Gatsby', 'F. Scott Fitzgerald', 'Classic', 1925);
 
--- This command shows the data that gets inserted into the table
-SELECT * FROM tbl_BooksDB;
+-- Insert sample borrowers
+INSERT INTO Borrowers (name, email, phone_number) VALUES
+('Alice Johnson', 'alice@gmail.com', '123-456-7890'),
+('Bob Smith', 'bob@gmail.com', '987-654-3210');
 
--- these set of update statments allow data to be updated at any given moment
-UPDATE tbl_BooksDB
-SET Title = '', Author = '', Genre = '', Published_year = ''
-WHERE Book_id = 1;
-
-
-UPDATE tbl_BooksDB
-SET Title = '', Author = '', Genre = '', Published_year = ''
-WHERE Book_id = 2;
-
-UPDATE tbl_BooksDB
-SET Title = '', Author = '', Genre = '', Published_year = ''
-WHERE Book_id = 3;
+-- Insert sample borrowed books
+INSERT INTO BorrowedBooks (book_id, borrower_id, borrow_date, return_date) VALUES
+(1, 1, '2025-04-01', NULL),
+(2, 2, '2025-04-02', NULL);
 
 
-
-UPDATE tbl_BooksDB
-SET Title = '', Author = '', Genre = '', Published_year = ''
-WHERE Book_id = 4;
+SELECT * FROM Books;
 
 
-
-UPDATE tbl_BooksDB
-SET Title = '', Author = '', Genre = '', Published_year = ''
-WHERE Book_id = 5;
+SELECT * FROM Borrowers;
 
 
--- A table for the people who borrowed books
-
-CREATE TABLE Borrowers(
-BorrowerID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-Borrower VARCHAR(80) NOT NULL,
-Email VARCHAR(80) NOT NULL,
-Telephone VARCHAR(80) NOT NULL
-
-)
-
-DESC borrowers
-
-EXPLAIN Borrowers;
+SELECT bb.borrowed_id, b.title, br.name, bb.borrow_date, bb.return_date
+FROM BorrowedBooks bb
+JOIN Books b ON bb.book_id = b.book_id
+JOIN Borrowers br ON bb.borrower_id = br.borrower_id;
 
 
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('William Kingdon Clifford', 'WilliamKingdomClifford@gmail.com', '07403539846')
+UPDATE BorrowedBooks
+SET return_date = '2025-04-15'
+WHERE borrowed_id = 1;
 
 
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('James Watt', 'JamesWatt@gmail.com', '07556915612')
+SELECT * FROM BorrowedBooks
+WHERE borrower_id = 1 AND return_date IS NULL;
 
 
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('Karl Pearson', 'KarlPearson@gmail.com', '07449483233')
+DELETE FROM Borrowers
+WHERE borrower_id = 1;
 
-
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('Charles Spearman', 'CharlesSpearman@gmail.com', '7407059209')
-
-
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('Francis Galton', 'FrancisGlaton@gmail.com', '7401338216')
-
-
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('Isaac Todhunter', 'IsaacTodhunter@gmail.com', '7406171775')
-
-
-INSERT INTO borrowers  (Borrower,Email,Telephone)
-VALUES('Wilhelm Maximilian Wundt', 'WilhelmMaximilianWundt@gmail.com', '7402254465')
-
-
-SELECT * FROM borrowers;
-
-DELETE FROM borrowers WHERE BorrowerID = 3
-
-TRUNCATE borrowers
+DELETE FROM Borrowers
+WHERE borrower_id = 1
+AND NOT EXISTS (
+    SELECT 1 FROM BorrowedBooks
+    WHERE borrower_id = 1 AND return_date IS NULL
+);
